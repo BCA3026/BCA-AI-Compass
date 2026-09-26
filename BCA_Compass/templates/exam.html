@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}Exam Compass — BCA-AI Compass{% endblock %}
+{% block content %}
+<div class="section">
+
+    <div class="page-header">
+        <h1>📝 Exam Compass</h1>
+        <p>Access past papers and generate AI-powered practice papers based on your study material</p>
+    </div>
+
+    <div id="alertContainer"></div>
+
+    <div class="tabs tab-group">
+        <button class="tab-btn active" data-tab="pastPapers">📄 Past Papers</button>
+        <button class="tab-btn" data-tab="aiGenerator">🤖 AI Paper Generator</button>
+    </div>
+
+    <!-- Tab 1: Past Papers -->
+    <div class="tab-content active" id="pastPapers">
+        <div class="card">
+            <div class="form-group" style="margin:0;">
+                <label class="form-label">📂 Filter by Subject</label>
+                <select class="form-select" id="paperFilter" onchange="filterPapers()">
+                    <option value="all">All Subjects</option>
+                    {% for subject in paper_subjects %}
+                    <option value="{{ subject }}">{{ subject }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <p style="color:var(--text-light); margin-bottom:20px; font-size:14px;">
+            📊 Total Papers: <span id="paperCount">{{ papers|length }}</span>
+        </p>
+        {% if papers %}
+            {% for paper in papers %}
+            <div class="card paper-item fade-in" data-subject="{{ paper.subject }}">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <span style="font-size:32px;">📄</span>
+                        <div>
+                            <strong style="color:var(--primary); font-size:16px;">{{ paper.subject }}</strong>
+                            <div style="margin-top:4px;">
+                                <span class="badge badge-yellow">📅 {{ paper.year }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="{{ paper.paper_link }}" target="_blank" class="btn btn-blue">Open Paper →</a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="card text-center" style="padding:60px;">
+                <div style="font-size:52px; margin-bottom:14px;">📭</div>
+                <h3 style="color:var(--text-light);">No past papers yet</h3>
+                <p style="color:var(--text-light);">Ask admin to add past papers</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Tab 2: AI Generator -->
+    <div class="tab-content" id="aiGenerator">
+        {% if resource_subjects %}
+        <div class="card">
+            <h3 style="color:var(--primary); margin-bottom:8px;">🤖 Generate AI Practice Paper</h3>
+            <p style="color:var(--text-light); font-size:13px; margin-bottom:20px;">
+                📚 Paper will be generated based on your <strong>Resource Hub materials</strong> + past paper patterns!
+            </p>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">📚 Select Subject (from Resource Hub)</label>
+                    <select class="form-select" id="genSubject">
+                        {% for subject in resource_subjects %}
+                        <option value="{{ subject }}">{{ subject }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">📊 Total Marks</label>
+                    <select class="form-select" id="genMarks">
+                        <option value="20">20 Marks</option>
+                        <option value="30">30 Marks</option>
+                        <option value="50" selected>50 Marks</option>
+                        <option value="70">70 Marks</option>
+                        <option value="100">100 Marks</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn btn-blue btn-full" onclick="generatePaper()" style="font-size:15px; padding:14px;">
+                📜 Generate Paper from Study Material
+            </button>
+        </div>
+        {% else %}
+        <div class="card text-center" style="padding:60px;">
+            <div style="font-size:52px; margin-bottom:14px;">📭</div>
+            <h3 style="color:var(--text-light);">No study materials found!</h3>
+            <p style="color:var(--text-light);">Ask admin to add resources in Resource Hub first.<br>AI will generate paper based on those materials.</p>
+        </div>
+        {% endif %}
+
+        <!-- Generated Paper -->
+        <div id="paperOutput" style="display:none;">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+                    <h3 style="color:var(--primary);">📋 Generated Paper</h3>
+                    <button class="btn btn-success" onclick="downloadPaper()">⬇️ Download as Text</button>
+                </div>
+                <div id="paperContent"
+                     style="white-space:pre-wrap; font-family:'Courier New',monospace; font-size:14px; line-height:1.9;
+                            color:var(--text); background:var(--bg); padding:24px; border-radius:12px;
+                            border:2px solid var(--border); max-height:600px; overflow-y:auto;"></div>
+            </div>
+        </div>
+
+        <div id="paperLoading" style="display:none; text-align:center; padding:60px;">
+            <div class="spinner"></div>
+            <p style="color:var(--text-light); margin-top:14px; font-size:15px;">🤖 Generating paper from your study material...<br><small>This may take 15-30 seconds</small></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterPapers() {
+    const subject = document.getElementById('paperFilter').value;
+    const items = document.querySelectorAll('.paper-item');
+    let count = 0;
+    items.forEach(item => {
+        const match = subject === 'all' || item.getAttribute('data-subject') === subject;
+        item.style.display = match ? 'block' : 'none';
+        if(match) count++;
+    });
+    document.getElementById('paperCount').textContent = count;
+}
+
+async function generatePaper() {
+    const subjectEl = document.getElementById('genSubject');
+    const marksEl = document.getElementById('genMarks');
+    if(!subjectEl || !marksEl) return;
+    const subject = subjectEl.value;
+    const marks = marksEl.value;
+
+    document.getElementById('paperLoading').style.display = 'block';
+    document.getElementById('paperOutput').style.display = 'none';
+
+    try {
+        const response = await fetch('/api/generate-paper', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({subject, marks})
+        });
+        const data = await response.json();
+        if(data.error) {
+            showAlert('❌ ' + data.error, 'danger');
+        } else if(data.paper) {
+            document.getElementById('paperContent').textContent = data.paper;
+            document.getElementById('paperOutput').style.display = 'block';
+            document.getElementById('paperOutput').scrollIntoView({behavior:'smooth'});
+        }
+    } catch(err) {
+        showAlert('Server error. Please try again.', 'danger');
+    } finally {
+        document.getElementById('paperLoading').style.display = 'none';
+    }
+}
+
+function downloadPaper() {
+    const content = document.getElementById('paperContent').textContent;
+    const subject = document.getElementById('genSubject').value;
+    const marks = document.getElementById('genMarks').value;
+    const blob = new Blob([content], {type:'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${subject}_${marks}marks_paper.txt`;
+    a.click();
+}
+</script>
+{% endblock %}

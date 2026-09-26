@@ -1,0 +1,497 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel — BCA-AI Compass{% endblock %}
+
+{% block content %}
+<div class="section">
+
+    <div class="page-header">
+        <h1>⚙️ Admin Panel</h1>
+        <p>Manage resources, seniors, papers, roadmaps and more</p>
+    </div>
+
+    <div id="alertContainer"></div>
+
+    {% if not session.admin %}
+    <!-- Admin Login -->
+    <div style="max-width:400px; margin:0 auto;">
+        <div class="card">
+            <h3 style="color:var(--primary); margin-bottom:16px;">🔐 Admin Login</h3>
+            <form action="/admin/login" method="POST">
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" name="password" class="form-control"
+                           placeholder="Enter admin password" required>
+                </div>
+                <button type="submit" class="btn btn-blue btn-full">Login →</button>
+            </form>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Admin Dashboard -->
+    <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+        <a href="/admin/logout" class="btn btn-danger" style="padding:8px 16px;">🚪 Logout</a>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid-4" style="margin-bottom:24px;">
+        <div class="card text-center" style="padding:18px;">
+            <div style="font-size:28px; font-weight:800; color:var(--primary);">{{ stats.resources }}</div>
+            <div style="color:var(--text-light); font-size:13px;">📚 Resources</div>
+        </div>
+        <div class="card text-center" style="padding:18px;">
+            <div style="font-size:28px; font-weight:800; color:var(--primary);">{{ stats.seniors }}</div>
+            <div style="color:var(--text-light); font-size:13px;">🎓 Seniors</div>
+        </div>
+        <div class="card text-center" style="padding:18px;">
+            <div style="font-size:28px; font-weight:800; color:var(--primary);">{{ stats.papers }}</div>
+            <div style="color:var(--text-light); font-size:13px;">📄 Papers</div>
+        </div>
+        <div class="card text-center" style="padding:18px;">
+            <div style="font-size:28px; font-weight:800; color:var(--primary);">{{ stats.students }}</div>
+            <div style="color:var(--text-light); font-size:13px;">👥 Students</div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs tab-group">
+        <button class="tab-btn active" data-tab="tabResources">📚 Resources</button>
+        <button class="tab-btn" data-tab="tabSeniors">🎓 Seniors</button>
+        <button class="tab-btn" data-tab="tabPapers">📄 Past Papers</button>
+        <button class="tab-btn" data-tab="tabRoadmaps">🗺️ Roadmaps</button>
+        <button class="tab-btn" data-tab="tabStudents">👥 Students</button>
+        <button class="tab-btn" data-tab="tabAbout">ℹ️ About Page</button>
+    </div>
+
+    <!-- ── TAB 1: RESOURCES ── -->
+    <div class="tab-content active" id="tabResources">
+        <div class="card" style="margin-bottom:20px;">
+            <h3 style="color:var(--primary); margin-bottom:16px;">➕ Add Resource</h3>
+            <form action="/admin/add-resource" method="POST">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">📂 Subject</label>
+                        <input type="text" name="subject" class="form-control"
+                               placeholder="e.g. Python, Machine Learning, SQL..." required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">📝 Topic</label>
+                        <input type="text" name="topic" class="form-control"
+                               placeholder="e.g. Lists and Tuples, K-Means..." required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">📄 File Type</label>
+                        <select name="file_type" class="form-select">
+                            <option value="PDF">PDF</option>
+                            <option value="Notes">Notes</option>
+                            <option value="Word">Word</option>
+                            <option value="Image">Image</option>
+                            <option value="Video">Video</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">🔗 Resource Link (Google Drive / Any URL)</label>
+                        <input type="url" name="link" class="form-control"
+                               placeholder="https://drive.google.com/..." required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-blue">➕ Add Resource</button>
+            </form>
+        </div>
+
+        <h4 style="color:var(--primary); margin-bottom:12px;">📋 All Resources ({{ resources|length }})</h4>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Subject</th>
+                        <th>Topic</th>
+                        <th>Type</th>
+                        <th>Link</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in resources %}
+                    <tr>
+                        <td>{{ r.id }}</td>
+                        <td><span class="badge badge-blue">{{ r.subject }}</span></td>
+                        <td>{{ r.topic }}</td>
+                        <td><span class="badge badge-purple">{{ r.file_type }}</span></td>
+                        <td>
+                            <a href="{{ r.link }}" target="_blank"
+                               class="btn btn-blue" style="padding:4px 10px; font-size:12px;">
+                               Open →
+                            </a>
+                        </td>
+                        <td>
+                            <a href="/admin/delete-resource/{{ r.id }}"
+                               onclick="return confirm('Delete this resource?')"
+                               class="btn btn-danger" style="padding:4px 10px; font-size:12px;">
+                               🗑️ Delete
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" style="text-align:center; color:var(--text-light); padding:20px;">No resources added yet!</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ── TAB 2: SENIORS ── -->
+    <div class="tab-content" id="tabSeniors">
+        <div class="card" style="margin-bottom:20px;">
+            <h3 style="color:var(--primary); margin-bottom:16px;">➕ Add Senior Account</h3>
+            <form action="/admin/add-senior" method="POST">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">👤 Full Name</label>
+                        <input type="text" name="name" class="form-control"
+                               placeholder="Senior's full name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">🔑 Username (for login)</label>
+                        <input type="text" name="username" class="form-control"
+                               placeholder="e.g. harsh2024" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">🔒 Password</label>
+                        <input type="text" name="password" class="form-control"
+                               placeholder="Set a password" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">📅 Batch Year</label>
+                        <input type="text" name="batch_year" class="form-control"
+                               placeholder="e.g. 2021-2024">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-blue">➕ Add Senior</button>
+            </form>
+        </div>
+
+        <h4 style="color:var(--primary); margin-bottom:12px;">📋 All Seniors ({{ seniors|length }})</h4>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Username</th>
+                        <th>Batch</th>
+                        <th>Company</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in seniors %}
+                    <tr>
+                        <td>{{ s.id }}</td>
+                        <td><strong>{{ s.name }}</strong></td>
+                        <td><code style="background:var(--bg); padding:2px 6px; border-radius:4px;">{{ s.username }}</code></td>
+                        <td>{{ s.batch_year or '—' }}</td>
+                        <td>{{ s.company or '—' }}</td>
+                        <td>
+                            {% if s.is_blocked %}
+                            <span class="badge badge-red">🚫 Blocked</span>
+                            {% else %}
+                            <span class="badge badge-green">✅ Active</span>
+                            {% endif %}
+                        </td>
+                        <td style="display:flex; gap:6px; flex-wrap:wrap;">
+                            <a href="/admin/toggle-senior/{{ s.id }}"
+                               class="btn {% if s.is_blocked %}btn-success{% else %}btn-warning{% endif %}"
+                               style="padding:4px 10px; font-size:12px;">
+                               {% if s.is_blocked %}✅ Unblock{% else %}🚫 Block{% endif %}
+                            </a>
+                            <a href="/admin/delete-senior/{{ s.id }}"
+                               onclick="return confirm('Delete this senior? This cannot be undone!')"
+                               class="btn btn-danger" style="padding:4px 10px; font-size:12px;">
+                               🗑️ Delete
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" style="text-align:center; color:var(--text-light); padding:20px;">No seniors added yet!</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ── TAB 3: PAST PAPERS ── -->
+    <div class="tab-content" id="tabPapers">
+        <div class="card" style="margin-bottom:20px;">
+            <h3 style="color:var(--primary); margin-bottom:16px;">➕ Add Past Paper</h3>
+            <form action="/admin/add-paper" method="POST">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">📚 Subject</label>
+                        <input type="text" name="subject" class="form-control"
+                               placeholder="e.g. Python, Data Structures..." required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">📅 Year</label>
+                        <input type="text" name="year" class="form-control"
+                               placeholder="e.g. 2023-24" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">🔗 Paper Link (Google Drive)</label>
+                    <input type="url" name="paper_link" class="form-control"
+                           placeholder="https://drive.google.com/..." required>
+                </div>
+                <button type="submit" class="btn btn-blue">➕ Add Paper</button>
+            </form>
+        </div>
+
+        <h4 style="color:var(--primary); margin-bottom:12px;">📋 All Past Papers ({{ papers|length }})</h4>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Subject</th>
+                        <th>Year</th>
+                        <th>Link</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in papers %}
+                    <tr>
+                        <td>{{ p.id }}</td>
+                        <td>{{ p.subject }}</td>
+                        <td><span class="badge badge-yellow">📅 {{ p.year }}</span></td>
+                        <td>
+                            <a href="{{ p.paper_link }}" target="_blank"
+                               class="btn btn-blue" style="padding:4px 10px; font-size:12px;">
+                               Open →
+                            </a>
+                        </td>
+                        <td>
+                            <a href="/admin/delete-paper/{{ p.id }}"
+                               onclick="return confirm('Delete this paper?')"
+                               class="btn btn-danger" style="padding:4px 10px; font-size:12px;">
+                               🗑️ Delete
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" style="text-align:center; color:var(--text-light); padding:20px;">No papers added yet!</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ── TAB 4: ROADMAPS ── -->
+    <div class="tab-content" id="tabRoadmaps">
+        <div class="card" style="margin-bottom:20px;">
+            <h3 style="color:var(--primary); margin-bottom:16px;">➕ Add Career Roadmap</h3>
+            <form action="/admin/add-roadmap" method="POST">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">🎯 Career Name</label>
+                        <select name="career_name" class="form-select">
+                            <option>ML Engineer</option>
+                            <option>Data Scientist</option>
+                            <option>Data Analyst</option>
+                            <option>Web Developer</option>
+                            <option>Full Stack Developer</option>
+                            <option>Android Developer</option>
+                            <option>iOS Developer</option>
+                            <option>AI Developer</option>
+                            <option>LLM Engineer</option>
+                            <option>Prompt Engineer</option>
+                            <option>MLOps Engineer</option>
+                            <option>Cybersecurity Analyst</option>
+                            <option>Cloud Engineer</option>
+                            <option>Database Administrator</option>
+                            <option>Business Analyst</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">🔗 Roadmap Drive Link</label>
+                        <input type="url" name="roadmap_link" class="form-control"
+                               placeholder="https://drive.google.com/..." required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-blue">➕ Add Roadmap</button>
+            </form>
+        </div>
+
+        <h4 style="color:var(--primary); margin-bottom:12px;">📋 All Roadmaps ({{ roadmaps|length }})</h4>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Career</th>
+                        <th>Link</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in roadmaps %}
+                    <tr>
+                        <td>{{ r.id }}</td>
+                        <td><span class="badge badge-green">🎯 {{ r.career_name }}</span></td>
+                        <td>
+                            <a href="{{ r.roadmap_link }}" target="_blank"
+                               class="btn btn-blue" style="padding:4px 10px; font-size:12px;">
+                               Open →
+                            </a>
+                        </td>
+                        <td>
+                            <a href="/admin/delete-roadmap/{{ r.id }}"
+                               onclick="return confirm('Delete this roadmap?')"
+                               class="btn btn-danger" style="padding:4px 10px; font-size:12px;">
+                               🗑️ Delete
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" style="text-align:center; color:var(--text-light); padding:20px;">No roadmaps added yet!</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ── TAB 5: STUDENTS ── -->
+    <div class="tab-content" id="tabStudents">
+        <h3 style="color:var(--primary); margin-bottom:16px;">👥 Registered Students</h3>
+        <p style="color:var(--text-light); font-size:13px; margin-bottom:16px;">
+            Students who registered in AI Study ChatBot or SkillCheck AI
+        </p>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Course Year</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for st in students %}
+                    <tr>
+                        <td>{{ st.id }}</td>
+                        <td><strong>{{ st.name }}</strong></td>
+                        <td>{{ st.email }}</td>
+                        <td><span class="badge badge-blue">{{ st.course_year }}</span></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" style="text-align:center; color:var(--text-light); padding:20px;">No students registered yet!</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ── TAB 6: ABOUT PAGE ── -->
+    <div class="tab-content" id="tabAbout">
+        <div class="card">
+            <h3 style="color:var(--primary); margin-bottom:20px;">ℹ️ Update About & Contact Page</h3>
+            <form action="/admin/update-about" method="POST" enctype="multipart/form-data">
+
+                <h4 style="color:var(--primary); margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid var(--border);">
+                    👨‍💻 Developer Info
+                </h4>
+                <div class="grid-2" style="margin-bottom:16px;">
+                    <div class="form-group">
+                        <label class="form-label">👤 Developer Name</label>
+                        <input type="text" name="dev_name" class="form-control"
+                               value="{{ about.dev_name or 'Harsh Lalka' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">🎓 Roll No</label>
+                        <input type="text" name="roll_no" class="form-control"
+                               value="{{ about.roll_no or '3026' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">📧 Email</label>
+                        <input type="email" name="dev_email" class="form-control"
+                               value="{{ about.dev_email or '' }}" placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">📞 Contact</label>
+                        <input type="text" name="dev_contact" class="form-control"
+                               value="{{ about.dev_contact or '' }}" placeholder="+91 xxxxx xxxxx">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">📷 Developer Photo</label>
+                    {% if about.dev_photo %}
+                    <div style="margin-bottom:10px;">
+                        <img src="{{ about.dev_photo }}"
+                             style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid var(--primary);">
+                        <span style="color:var(--text-light); font-size:13px; margin-left:10px;">Current photo</span>
+                    </div>
+                    {% endif %}
+                    <input type="file" name="dev_photo" class="form-control" accept="image/*">
+                </div>
+
+                <h4 style="color:var(--primary); margin:20px 0 12px; padding-bottom:8px; border-bottom:2px solid var(--border);">
+                    🔗 Social Links
+                </h4>
+                <div class="grid-2" style="margin-bottom:16px;">
+                    <div class="form-group">
+                        <label class="form-label">🔗 LinkedIn</label>
+                        <input type="url" name="linkedin" class="form-control"
+                               value="{{ about.linkedin or '' }}" placeholder="https://linkedin.com/in/...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">🐙 GitHub</label>
+                        <input type="url" name="github" class="form-control"
+                               value="{{ about.github or '' }}" placeholder="https://github.com/...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">📸 Instagram</label>
+                        <input type="url" name="instagram" class="form-control"
+                               value="{{ about.instagram or '' }}" placeholder="https://instagram.com/...">
+                    </div>
+                </div>
+
+                <h4 style="color:var(--primary); margin:20px 0 12px; padding-bottom:8px; border-bottom:2px solid var(--border);">
+                    🏫 College Info
+                </h4>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">🏫 College Name</label>
+                        <input type="text" name="college_name" class="form-control"
+                               value="{{ about.college_name or 'Narmad College of Science and Commerce' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">📍 Address</label>
+                        <input type="text" name="college_address" class="form-control"
+                               value="{{ about.college_address or 'Zadeshwar Road, Bharuch, Gujarat' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">📧 Department Email</label>
+                        <input type="email" name="dept_email" class="form-control"
+                               value="{{ about.dept_email or '' }}" placeholder="dept@college.edu">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">📞 College Contact</label>
+                        <input type="text" name="college_contact" class="form-control"
+                               value="{{ about.college_contact or '' }}" placeholder="+91 xxxxx xxxxx">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-blue" style="margin-top:8px;">
+                    💾 Save About Page
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {% endif %}
+</div>
+{% endblock %}

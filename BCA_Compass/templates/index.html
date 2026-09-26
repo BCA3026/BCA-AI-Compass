@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Home — BCA-AI Compass{% endblock %}
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-badge">🎓 Narmad College of Science and Commerce — BCA AI & Data Analytics</div>
+        <h1>🧭 BCA-AI Compass</h1>
+        <p>Your Smart Study & Guidance Platform — Built by students, for students</p>
+        <div class="hero-btns">
+            <a href="/resources" class="btn-primary">📚 Explore Resources</a>
+            <a href="/about" class="btn-outline">ℹ️ Learn More</a>
+        </div>
+    </div>
+</section>
+<section class="stats-section">
+    <div class="stats-grid">
+        <div class="stat-item"><div class="stat-number" data-count="{{ stats.resources }}">{{ stats.resources }}</div><div class="stat-label">📚 Study Resources</div></div>
+        <div class="stat-item"><div class="stat-number" data-count="{{ stats.seniors }}">{{ stats.seniors }}</div><div class="stat-label">🎓 Seniors</div></div>
+        <div class="stat-item"><div class="stat-number" data-count="{{ stats.papers }}">{{ stats.papers }}</div><div class="stat-label">📝 Past Papers</div></div>
+        <div class="stat-item"><div class="stat-number" data-count="{{ stats.students }}">{{ stats.students }}</div><div class="stat-label">👥 Students</div></div>
+    </div>
+</section>
+<div class="section">
+    <h2 class="section-title">🚀 Explore Our Modules</h2>
+    <p class="section-subtitle">Everything you need for your BCA-AI journey — all in one place</p>
+    <div class="modules-grid">
+        <a href="/resources" class="module-card card-blue fade-in"><div class="card-icon">📚</div><div class="card-title">Resource Hub</div><div class="card-desc">Access subject-wise study notes and materials powered by AI.</div><span class="card-btn">Explore →</span></a>
+        <a href="/exam" class="module-card card-orange fade-in"><div class="card-icon">📝</div><div class="card-title">Exam Compass</div><div class="card-desc">Access past exam papers and generate AI-powered practice papers.</div><span class="card-btn">Practice →</span></a>
+        <a href="/career" class="module-card card-green fade-in"><div class="card-icon">🎯</div><div class="card-title">Career Predictor</div><div class="card-desc">Discover your perfect tech career path using ML-powered prediction.</div><span class="card-btn">Predict →</span></a>
+        <a href="/chatbot" class="module-card card-purple fade-in"><div class="card-icon">🧠</div><div class="card-title">AI Study ChatBot</div><div class="card-desc">24/7 AI assistant that answers from your college resource data.</div><span class="card-btn">Ask AI →</span></a>
+        <a href="/seniors" class="module-card card-teal fade-in"><div class="card-icon">🎓</div><div class="card-title">Seniors Wall</div><div class="card-desc">Read experiences and tips from seniors who walked this path.</div><span class="card-btn">Explore →</span></a>
+        <a href="/skillcheck" class="module-card card-red fade-in"><div class="card-icon">🎮</div><div class="card-title">SkillCheck AI</div><div class="card-desc">Test your knowledge with AI-generated MCQs and find your level.</div><span class="card-btn">Test Now →</span></a>
+    </div>
+</div>
+{% endblock %}
